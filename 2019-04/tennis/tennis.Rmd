@@ -1,0 +1,64 @@
+---
+title: "Tennis Grand Slams"
+author: "Murray Cadzow"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, echo = FALSE}
+library(tidyverse)
+```
+
+
+
+```{r}
+player_dob <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-04-09/player_dob.csv")
+
+grand_slams <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-04-09/grand_slams.csv")
+
+grand_slam_timeline <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-04-09/grand_slam_timeline.csv")
+```
+take a gander at the data
+```{r}
+head(grand_slam_timeline)
+head(grand_slams)
+head(player_dob)
+```
+
+what are the tournaments that are available?
+```{r}
+grand_slam_timeline %>% group_by(tournament) %>% tally()
+```
+
+Who has won, and how many times?
+```{r}
+grand_slam_timeline %>% filter(outcome == 'Won') %>% group_by(player, tournament) %>% tally() %>% arrange(desc(n), player)
+```
+```{r}
+player_tourn_wins <- grand_slam_timeline %>% filter(outcome == 'Won') %>% group_by(player, gender,tournament) %>% tally() %>% arrange(desc(n), player)
+
+# who has won more than 3 times at specific tournament
+player_gt_3 <- player_tourn_wins %>% filter(n > 3) %>% pull(player)
+
+player_tourn_wins %>% filter(player %in% player_gt_3) %>% ggplot(aes(x = player, y = n)) + geom_col() + facet_grid(~gender)
+```
+
+Is there a change in number of tournaments won by players over-time
+```{r}
+library(gganimate)
+dat <- grand_slam_timeline %>% filter(tournament == "Australian Open") %>% group_by(player, gender) %>%arrange(year) %>% mutate(win = if_else(outcome == "Won",TRUE, FALSE, FALSE), cs = cumsum(win)) %>% filter(player %in% (filter(., cs >1) %>% pull(player)))
+
+p <- ggplot(dat, aes(x = year, y = cs,by = player)) + geom_line() + facet_wrap(~gender) + 
+  geom_text(data = dat %>% filter(year == last(year)), 
+            aes(label = player, 
+                x = year + 0.5, 
+                y = cs), angle = 90, hjust = 0, vjust = 0.1) + guides(color = FALSE) + expand_limits(y = 0) + transition_reveal(along = year, keep_last = 10)
+```
+
+```{r}
+p
+```
+
+
+
+

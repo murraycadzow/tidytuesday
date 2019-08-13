@@ -1,0 +1,71 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(lubridate)
+theme_set(theme_bw())
+
+bike_traffic <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-04-02/bike_traffic.csv")
+
+```
+
+
+look at the total numbers
+```{r}
+bike_traffic %>% summarise(total_bikes = sum(bike_count, na.rm = TRUE), total_peds = sum(ped_count, na.rm = TRUE))
+```
+
+
+wrangle the date column
+```{r}
+bike_traffic <- bike_traffic %>% mutate(date = mdy_hms(date))
+```
+
+plot the counts by day
+```{r}
+bike_traffic %>% group_by(date = date(date), direction) %>% summarise(daily_count = sum(bike_count, na.rm = TRUE)) %>% ggplot(aes(x = date, y = daily_count)) + geom_line() + facet_wrap(~direction)
+```
+
+pedestrians by day
+```{r}
+bike_traffic %>% group_by(date = date(date), direction) %>% summarise(daily_count = sum(ped_count, na.rm = TRUE)) %>% ggplot(aes(x = date, y = daily_count)) + geom_line() + facet_wrap(~direction)
+```
+
+
+
+```{r}
+bike_traffic %>% group_by(hour = hour(date), direction) %>% summarise(hourly_bike = sum(bike_count, na.rm = TRUE), hourly_ped = sum(ped_count, na.rm = TRUE)) %>% gather(key="mode", value = "count", contains("hourly"))%>% ggplot(aes(x = hour, y = count, colour = mode)) + geom_line() + facet_wrap(~direction)
+```
+
+
+most popular days?
+```{r}
+bike_traffic %>% group_by(day(date)) %>% summarise(bike_sum = sum(bike_count, na.rm = TRUE)) %>% arrange(desc(bike_sum))
+```
+looks like the 30th is the most popular day of the month
+
+most popular day by trail:
+```{r}
+bike_traffic %>% group_by(date(date), crossing) %>% summarise(bike_sum = sum(bike_count, na.rm = TRUE)) %>% arrange(desc(bike_sum)) 
+```
+
+2018-05-30	Burke Gilman Trail is the most popular over all
+
+What happened on that day?
+```{r}
+bike_traffic %>% filter(date(date) == ymd("2018-05-30"), crossing == "Burke Gilman Trail") %>% ggplot(aes(x = hour(date), y = bike_count)) + geom_line() + facet_wrap(~direction)
+```
+
+
+weekdays vs weekend
+```{r}
+bike_traffic %>% mutate(day = wday(date, label = TRUE)) %>% ggplot(aes(x = day, y = bike_count)) + geom_boxplot()
+```
+
