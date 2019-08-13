@@ -1,0 +1,43 @@
+---
+title: "Untitled"
+author: "Murray Cadzow"
+date: "06/08/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+wildlife_impacts <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-07-23/wildlife_impacts.csv")
+
+```
+
+When are most wildlife strikes occuring?
+```{r}
+wildlife_impacts %>% ggplot(aes(x = incident_year, fill = time_of_day)) + geom_bar()
+```
+
+Most strikes are during the day which makes sense.
+
+How about the phase of flight?
+
+```{r}
+wildlife_impacts %>% mutate(phase_of_flt = str_to_sentence(phase_of_flt))%>% ggplot(aes(x = incident_year, fill = phase_of_flt)) + geom_bar()
+```
+
+How does phase of flight relate to cost of repairs?
+```{r}
+wildlife_impacts %>% mutate(phase_of_flt = str_to_sentence(phase_of_flt)) %>% filter(!is.na(cost_repairs_infl_adj))%>% ggplot(aes(x = phase_of_flt, y = cost_repairs_infl_adj)) + geom_boxplot() + scale_y_log10()
+```
+
+
+## Cost of species
+
+What is the most costly species of bird?
+```{r}
+wildlife_impacts %>%mutate(phase_of_flt = str_to_sentence(phase_of_flt)) %>%  group_by(species, phase_of_flt) %>% summarise(total_cost = sum(cost_repairs_infl_adj, na.rm = TRUE)) %>% arrange(desc(total_cost))
+```
+
