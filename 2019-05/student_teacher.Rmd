@@ -1,0 +1,60 @@
+---
+title: "Global student teacher ratios"
+author: Murray Cadzow
+date: 2019-05-07
+document: html_document
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(here)
+```
+
+TidyTuesday  dataset https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-07
+
+# Data Dictionary
+
+### `student_teacher_ratio.csv`
+
+|variable      |class     |description |
+|:---|:---|:-----------|
+|edulit_ind    | character | Unique ID|
+|indicator     | character | Education level group ("Lower Secondary Education", "Primary Education", "Upper Secondary Education", "Pre-Primary Education", "Secondary Education", "Tertiary Education", "Post-Secondary Non-Tertiary Education")|
+|country_code  | character |  Country code |
+|country       | character | Country Full name|
+|year          | integer (date)    | Year |
+|student_ratio | double    |Student to teacher ratio (lower = fewer students/teacher)|
+|flag_codes    | character | Code to indicate some metadata about exceptions |
+|flags         | character | Metadata about exceptions |
+
+# Data
+
+
+
+```{r}
+student_ratio <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-07/student_teacher_ratio.csv")
+```
+
+
+```{r}
+nz <- student_ratio %>% filter(country_code == "NZL")
+```
+
+```{r}
+ggplot(student_ratio, aes(x = year, y = student_ratio, by = edulit_ind)) + geom_point() + geom_line(aes(by = country, colour = indicator))
+```
+
+```{r}
+student_ratio %>% group_by(country) %>% summarise(mean_ratio = mean(student_ratio))%>% mutate(country = forcats::fct_reorder(country, .x = mean_ratio, mean)) %>% ggplot(., aes(x = country, y = mean_ratio)) + geom_col() 
+```
+
+```{r}
+student_ratio %>% mutate(indicator = case_when(str_detect(indicator, 'Secondary') ~ 'Secondary', TRUE ~ indicator )) %>% 
+  mutate(country = forcats::fct_reorder(country, .x = student_ratio, max)) %>% 
+  ggplot(., aes(x = country, y = student_ratio)) + geom_col()  + facet_wrap(~indicator)
+```
+
+```{r}
+nz %>% ggplot(aes(x = year, y = student_ratio, colour = indicator)) + geom_line()
+```
+

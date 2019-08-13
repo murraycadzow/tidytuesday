@@ -1,0 +1,60 @@
+---
+title: "Waste Recycling"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+
+```{r}
+coast_vs_waste <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-21/coastal-population-vs-mismanaged-plastic.csv") %>% set_names(janitor::make_clean_names(names(.)))
+
+
+mismanaged_vs_gdp <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-21/per-capita-mismanaged-plastic-waste-vs-gdp-per-capita.csv") %>% set_names(janitor::make_clean_names(names(.)))
+
+
+waste_vs_gdp <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-21/per-capita-plastic-waste-vs-gdp-per-capita.csv") %>% set_names(janitor::make_clean_names(names(.)))
+```
+
+```{r}
+map.world <- map_data('world') %>% 
+  filter(region != "Antarctica")
+
+map_data('world') %>%
+  group_by(region) %>%
+  summarise()
+
+
+waste_count <- waste_vs_gdp %>% group_by(entity) %>% summarise(mean_waste = mean(per_capita_plastic_waste_kilograms_per_person_per_day, na.rm = TRUE)) %>% 
+  mutate(entity = case_when(
+    str_detect(entity, "United States") ~ "USA",
+    str_detect(entity, "United Kingdom") ~ "UK",
+    TRUE ~ entity
+  
+))
+
+country_join <- left_join(map.world, waste_count, by = c('region' = 'entity'))
+
+
+ggplot(data = country_join, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = mean_waste)) +
+  labs(title = "",
+       subtitle = "",
+       x = "",
+       y = "",
+       caption = "") +
+  guides(
+    fill = guide_legend(title = ""))
+```
+
+```{r}
+#install.packages("countrycode")
+
+countrycode::countrycode("United States", origin = "country.name" , destination = "iso3c")
+
+code_link <- map.world %>%group_by(region) %>% summarise() %>% mutate(code = purrr::map_chr(region ,~countrycode::countrycode(.x, origin = "country.name" , destination = "iso3c")))
+```
+
