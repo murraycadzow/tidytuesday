@@ -8,8 +8,19 @@ n.b. not an actual dataset as part of R4DS Tidy Tuesday
 Key question: how does New Zealand compare to other countries in terms of workshops
 
 
-```{r setup, inlcude = FALSE}
+To do this we're going to grab data from three web pages to practice parsing html using R.
+
+1. Carpentries past workshops page
+2. Wikipedia list of countries and two-letter ISO codes
+3. Wikipedia list of countries and their populations
+
+We need each of these sources to be able to link the country ISO code from the flags on The Carpentries past workshops page with the country name, to then link it with the population information to calculate workshops per capita.
+
+First up load the required libraries.
+```{r setup, message = FALSE}
+library(maps)
 library(tidyverse)
+library(janitor)
 library(rvest)
 ```
 
@@ -80,7 +91,7 @@ country_data <- wiki_country_code_table_cleaned %>%
 
 Calculate per capita workshops and display table arranged descending by per capita
 
-n.b. need to sort out matching of country names since US and UK (notibly) aren't getting joined correctly
+n.b. need to ensure that the joining keys between tables all matched up - usually spellings of countries need checked between tables.
 ```{r}
 per_capita <- country_data %>%
   filter(!is.na(n)) %>%
@@ -139,7 +150,7 @@ A fun but not particularly useful statistic since it takes much less effort to i
 
 
 ```{r}
-map.world <- map_data("world") %>%
+map_world <- map_data("world") %>%
   filter(region != "Antarctica")
 
 per_cap_world <- per_capita %>% mutate(entity = case_when(
@@ -148,7 +159,7 @@ per_cap_world <- per_capita %>% mutate(entity = case_when(
   TRUE ~ english_short_name_using_title_case
 ))
 
-country_join <- left_join(map.world, per_cap_world, by = c("region" = "entity")) %>%
+country_join <- left_join(map_world, per_cap_world, by = c("region" = "entity")) %>%
   mutate(percapita = ifelse(is.na(percapita), 0, percapita))
 
 
