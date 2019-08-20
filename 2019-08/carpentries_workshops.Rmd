@@ -18,7 +18,8 @@ library(rvest)
 Grab the info from The Carpentries about past workshops
 ```{r}
 url <- "http://static.carpentries.org/past_workshops/"
-imgs <- read_html(url) %>% html_node("table") %>% html_nodes("img")
+past_workshops_table <- read_html(url) %>% html_node("table")
+imgs <- past_workshops_table %>% html_nodes("img")
 flags <-  tibble(class = xml_attr(imgs, "class"), title = xml_attr(imgs, "title"), alt = xml_attr(imgs, "alt")) %>% filter(str_detect(alt, "logo", negate = TRUE))
 
 
@@ -54,6 +55,10 @@ wiki_country_code_table_cleaned <- wiki_country_code_table %>%
   mutate(english_short_name_using_title_case = case_when(
     english_short_name_using_title_case == "United States of America" ~ "United States" , 
     english_short_name_using_title_case == "United Kingdom of Great Britain and Northern Ireland" ~ "United Kingdom",
+    english_short_name_using_title_case == "Korea, Republic of"~ "South Korea",
+    english_short_name_using_title_case == "Puerto Rico" ~ "Puerto Rico (U.S.)",
+    english_short_name_using_title_case == "Venezuela (Bolivarian Republic of)" ~ "Venezuela",
+  english_short_name_using_title_case ==  "Czechia" ~ "Czech Republic",
     TRUE ~ english_short_name_using_title_case)
   )
 ```
@@ -83,15 +88,17 @@ per_capita %>% knitr::kable()
 New Zealand hasn't run the most workshops but does seem to have run the most on a per capita basis
 
 ```{r}
-per_capita %>% arrange(desc(n)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, mean), highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = n, fill = highlight)) + geom_col() + theme_bw()
+per_capita %>% arrange(desc(n)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, max, .desc = TRUE), highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = n, fill = highlight)) + geom_col() + theme_bw()
 ```
 
 Arrange per capita by number of workshops run for top 20 countries (based on number of workshops)
+
+Left most has highest number of workshops
 ```{r}
 per_capita %>% 
   arrange(desc(n)) %>% 
   slice(1:20) %>% 
-  mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, mean), 
+  mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, max, .desc = TRUE), 
          highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% 
   ggplot(., aes(x = alpha_2_code, y = perCapita, fill = highlight)) + geom_col() + theme_bw()
 ```
@@ -99,7 +106,7 @@ per_capita %>%
 
 Top 20 countries by per capita
 ```{r}
-per_capita %>% arrange(desc(perCapita)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = perCapita, mean), nz_best = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = perCapita, fill = nz_best)) + geom_col() + theme_bw() + labs(title = "NZ has best per capitia rate of workshops")
+per_capita %>% arrange(desc(perCapita)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = perCapita, mean, .desc = TRUE), nz_best = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = perCapita, fill = nz_best)) + geom_col() + theme_bw() + labs(title = "NZ has best per capitia rate of workshops")
 ```
 
 A fun but not particularly useful statistic since it takes much less effort to influence per capita in small countries than in large population countries.
@@ -135,7 +142,7 @@ ggplot(data = country_join, aes(x = long, y = lat, group = group)) +
 
 We could even look what proportion of all workshops were taught in particular countries
 ```{r}
-per_capita %>% mutate(prop_workshops = n/sum(n)) %>% arrange(desc(prop_workshops)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = prop_workshops, max), NZ = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = prop_workshops, fill = NZ)) + geom_col() + theme_bw() + labs(title = "Proportion of workshops taught by country")
+per_capita %>% mutate(prop_workshops = n/sum(n)) %>% arrange(desc(prop_workshops)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = prop_workshops, max, .desc = TRUE), NZ = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = prop_workshops, fill = NZ)) + geom_col() + theme_bw() + labs(title = "Proportion of workshops taught by country")
   
 ```
 
