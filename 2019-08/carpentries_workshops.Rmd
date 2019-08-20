@@ -86,11 +86,13 @@ New Zealand hasn't run the most workshops but does seem to have run the most on 
 per_capita %>% arrange(desc(n)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, mean), highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = n, fill = highlight)) + geom_col() + theme_bw()
 ```
 
-
+Arrange per capita by number of workshops run for top 20 countries (based on number of workshops)
 ```{r}
-per_capita %>% arrange(desc(perCapita)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, mean), highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = perCapita, fill = highlight)) + geom_col() + theme_bw()
+per_capita %>% arrange(desc(n)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, mean), highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = perCapita, fill = highlight)) + geom_col() + theme_bw()
 ```
 
+
+Top 20 countries by per capita
 ```{r}
 per_capita %>% arrange(desc(perCapita)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = perCapita, mean), nz_best = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = perCapita, fill = nz_best)) + geom_col() + theme_bw() + labs(title = "NZ has best per capitia rate of workshops")
 ```
