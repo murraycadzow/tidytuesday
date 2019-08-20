@@ -32,6 +32,14 @@ Grab the table from wikipedia that can provide the population information
 wiki_pop_url <- "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population"
 wiki_pop_page <- read_html(wiki_pop_url) %>% html_node("table")
 wiki_pop_table <- wiki_pop_page %>% html_table() %>% set_names(nm = janitor::make_clean_names(names(.)))
+
+# clean up some country names and numeric columns
+wiki_pop_table_cleaned <- wiki_pop_table %>% 
+  mutate(
+    country_or_dependent_territory = str_remove(country_or_dependent_territory, "\\[Note [0-9]+\\]"),
+    population = as.numeric(str_remove_all(population, ",")),
+    percent_of_worldpopulation = as.numeric(str_remove_all(percent_of_worldpopulation, "%"))
+  )
 ```
 
 Grab the table from wikipedia to link two letter country codes to the population name
@@ -40,19 +48,33 @@ wiki_country_code_url <- "https://en.wikipedia.org/wiki/ISO_3166-1"
 
 # read the page and extract the table elements (the second table is what we want)
 wiki_country_code_table <-read_html(wiki_country_code_url) %>% html_nodes("table") %>% magrittr::extract2(2) %>% html_table(fill = TRUE) %>% set_names(nm = janitor::make_clean_names(names(.)))
+
+# clean some country names
+wiki_country_code_table_cleaned <- wiki_country_code_table %>%
+  mutate(english_short_name_using_title_case = case_when(
+    english_short_name_using_title_case == "United States of America" ~ "United States" , 
+    english_short_name_using_title_case == "United Kingdom of Great Britain and Northern Ireland" ~ "United Kingdom",
+    TRUE ~ english_short_name_using_title_case)
+  )
 ```
 
 
 Join the data together
 ```{r}
-country_data <- wiki_country_code_table %>% full_join(wiki_pop_table, by = c("english_short_name_using_title_case"= "country_or_dependent_territory")) %>% full_join(country_n_workshops, by = c("alpha_2_code"= "title"))
+country_data <- wiki_country_code_table_cleaned %>% 
+  full_join(wiki_pop_table_cleaned, by = c("english_short_name_using_title_case"= "country_or_dependent_territory")) %>% 
+  full_join(country_n_workshops, by = c("alpha_2_code"= "title"))
 ```
 
 Calculate per capita workshops and display table arranged descending by per capita
 
 n.b. need to sort out matching of country names since US and UK (notibly) aren't getting joined correctly
 ```{r}
-per_capita <- country_data %>% filter(!is.na(n)) %>% mutate(population = as.numeric(str_remove_all(population, ",")))%>% mutate(perCapita = n / population) %>% select(english_short_name_using_title_case, alpha_2_code, population, n, perCapita) %>% arrange(desc(perCapita))
+per_capita <- country_data %>% 
+  filter(!is.na(n)) %>% 
+  mutate(perCapita = n / population) %>% 
+  select(english_short_name_using_title_case, alpha_2_code, population, n, perCapita) %>% 
+  arrange(desc(perCapita))
 
 per_capita %>% knitr::kable()
 ```
