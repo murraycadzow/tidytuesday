@@ -3,6 +3,10 @@ title: "Carpentries around the world"
 output: html_document
 ---
 
+n.b. not an actual dataset as part of R4DS Tidy Tuesday
+
+Key question: how does New Zealand compare to other countries in terms of workshops
+
 
 ```{r setup, inlcude = FALSE}
 library(tidyverse)
@@ -53,3 +57,5 @@ per_capita <- country_data %>% filter(!is.na(n)) %>% mutate(population = as.nume
 per_capita %>% knitr::kable()
 ```
 
+
+New Zealand hasn't run the most workshops but does seem to have run the most on a per capita basis
