@@ -88,7 +88,12 @@ per_capita %>% arrange(desc(n)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats
 
 Arrange per capita by number of workshops run for top 20 countries (based on number of workshops)
 ```{r}
-per_capita %>% arrange(desc(n)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, mean), highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = perCapita, fill = highlight)) + geom_col() + theme_bw()
+per_capita %>% 
+  arrange(desc(n)) %>% 
+  slice(1:20) %>% 
+  mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, mean), 
+         highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% 
+  ggplot(., aes(x = alpha_2_code, y = perCapita, fill = highlight)) + geom_col() + theme_bw()
 ```
 
 
@@ -97,7 +102,7 @@ Top 20 countries by per capita
 per_capita %>% arrange(desc(perCapita)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = perCapita, mean), nz_best = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = perCapita, fill = nz_best)) + geom_col() + theme_bw() + labs(title = "NZ has best per capitia rate of workshops")
 ```
 
-
+A fun but not particularly useful statistic since it takes much less effort to influence per capita in small countries than in large population countries.
 
 
 ```{r}
@@ -115,17 +120,23 @@ country_join <- left_join(map.world, per_cap_world, by = c('region' = 'entity'))
 
 
 ggplot(data = country_join, aes(x = long, y = lat, group = group)) +
-  geom_polygon(aes(fill = perCapita)) +
-  scale_fill_continuous(high = "yellow", low = "blue", breaks = c(0,seq( 1e-7, 1e-5, length.out = 7  ))) +
+  geom_polygon(aes(fill = perCapita), colour = "darkgrey") +
+  scale_fill_continuous(high = "yellow", low = "blue", breaks = c(seq( 1e-5, 1e-7, length.out = 7  ),0)) +
   labs(title = "",
        subtitle = "",
        x = "",
        y = "",
        caption = "") +
   guides(
-    fill = guide_legend(title = "")) + 
+    fill = guide_legend(title = "Workshops Per Capita")) + 
   coord_fixed(ratio = 1.3) + theme_bw()
-
 
 ```
 
+We could even look what proportion of all workshops were taught in particular countries
+```{r}
+per_capita %>% mutate(prop_workshops = n/sum(n)) %>% arrange(desc(prop_workshops)) %>% slice(1:20)%>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = prop_workshops, max), NZ = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>% ggplot(., aes(x = alpha_2_code, y = prop_workshops, fill = NZ)) + geom_col() + theme_bw() + labs(title = "Proportion of workshops taught by country")
+  
+```
+
+NZ still doing well but not as favourably.
