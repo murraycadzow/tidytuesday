@@ -95,11 +95,11 @@ n.b. need to ensure that the joining keys between tables all matched up - usuall
 ```{r}
 per_capita <- country_data %>%
   filter(!is.na(n)) %>%
-  mutate(percapita = n / population) %>%
+  mutate(percapita = n / population, per_mil = n / (population/1e6)) %>%
   select(english_short_name_using_title_case,
          alpha_2_code, population,
          n,
-         percapita) %>%
+         percapita, per_mil) %>%
   arrange(desc(percapita))
 
 per_capita %>% knitr::kable()
@@ -128,7 +128,7 @@ per_capita %>%
   slice(1:20) %>%
   mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = n, max, .desc = TRUE),
          highlight = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>%
-  ggplot(., aes(x = alpha_2_code, y = percapita, fill = highlight)) +
+  ggplot(., aes(x = alpha_2_code, y = per_mil, fill = highlight)) +
   geom_col() +
   theme_bw()
 ```
@@ -140,10 +140,11 @@ per_capita %>%
   arrange(desc(percapita)) %>%
   slice(1:20) %>% mutate(alpha_2_code = forcats::fct_reorder(alpha_2_code, .x = percapita, mean, .desc = TRUE),
                         nz_best = ifelse(alpha_2_code  == "NZ", TRUE, FALSE)) %>%
-  ggplot(., aes(x = alpha_2_code, y = percapita, fill = nz_best)) +
+  ggplot(., aes(x = alpha_2_code, y = per_mil, fill = nz_best)) +
   geom_col() +
   theme_bw() +
-  labs(title = "NZ has best per capita rate of workshops")
+  labs(title = "NZ has best per capita rate of workshops", y = "Workshops per million people", x = "Country (Top 20 per capita)") + theme(legend.position = 'none') +
+   scale_fill_manual(values = c("lightgrey", "black"))
 ```
 
 A fun but not particularly useful statistic since it takes much less effort to influence per capita in small countries than in large population countries.
@@ -173,7 +174,7 @@ ggplot(data = country_join, aes(x = long, y = lat, group = group)) +
        y = "",
        caption = "") +
   guides(
-    fill = guide_legend(title = "Workshops Per Capita")) +
+    fill = guide_legend(title = "Workshops Per Capita (millions)")) +
   coord_fixed(ratio = 1.3) + theme_bw()
 
 ```
